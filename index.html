@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>h5赛车小游戏</title>
+  <script>
+    !function (a) { var b, c; /Android (\d+\.\d+)/.test(navigator.userAgent) ? (b = parseFloat(RegExp.$1), b > 2.3 ? (c = parseInt(window.screen.width) / a, document.write('<meta name="viewport" content="width=' + a + ",minimum-scale=" + c + ",maximum-scale=" + c + ', target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',user-scalable=no,target-densitydpi=device-dpi,minimal-ui,viewport-fit=cover">') }(750);
+  </script>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <canvas width="750" height="900" id="canvas" class="can"></canvas>
+  <div id="Jstart" class="btn-start">开始</div>
+  <div id="Jstop" class="btn-start">停止</div>
+  <script src="index.js?v=1"></script>
+</body>
+</html>
