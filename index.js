@@ -1,42 +1,99 @@
-mod = {
-  timer:null,
+const docW = document.documentElement.clientWidth
+const docH = document.documentElement.clientHeight
+
+let oBaseBlock = {
+  width: 90,
+  height: 190
+}
+
+
+
+let mod = {
+  aniTimer:null,
   isStop:false,
   blocks:[],
-  speed:2,
+  speed:4,
+  coinSpeed:6,
   car:null,
-  timeGap:100,
-  smooth:4,
+  smooth:8,  // 汽车移动速度
+  keyBoardTimeGap:100,
+  aniTimeGap:16,
+  timerPreffix:'timer_',
+  fontSize:40,
+  baseBlock:{
+    width:90,
+    height:190
+  },
+  score:0,
   replay(){
     this.isStop = false;
-    this.blocks = []
+    this.erase()
+  },
+  genBlocks() {
+    let _this = this;
+    return [
+      {
+        x: ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
+        y: -50 - ~~(Math.random()*200),
+        width: oBaseBlock.width,
+        height: oBaseBlock.height,
+        speed: _this.speed + ~~(Math.random()*3)
+      },
+      {
+        x: ~~(docW / 2) + ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
+        y: -250 - ~~(Math.random() * 200),
+        width: oBaseBlock.width,
+        height: oBaseBlock.height,
+        speed: _this.speed + ~~(Math.random()*4)
+      },
+      {
+        x: ~~((Math.random()*(~~(docW / oBaseBlock.width) )) * (1.5*oBaseBlock.width)),
+        y: -50 - (~~Math.random()*50),
+        width: 50,
+        height: 50,
+        coin: 10
+      }
+    ];
   },
   init(ele){
-    var canvas = document.querySelector(ele);
-    var cxt = canvas.getContext('2d');
+    let _this = this;
+
+
+    let wrap = document.querySelector(ele)
+    let canvas = document.createElement('canvas');
+    let cxt = canvas.getContext('2d');
+
+    canvas.classList.add('can')
+    canvas.width = docW
+    canvas.height = docH
+
+    wrap.appendChild(canvas)
+
     this.canvas = canvas
+    this.cxt = cxt;
     this.canWitdh = canvas.width
     this.canHeight = canvas.height
-    console.log('canvas宽高:',this.canWitdh,this.canHeight);
-    this.cxt = cxt;
-    this.isStop = false;
-    let _this = this;
-    // 赛车
+
+    this.carImg = document.createElement('img')
+    this.carImg.src = 'images/car.png';
+
+    this.car0Img = document.createElement('img')
+    this.car0Img.src = 'images/car0.png';
+
+    this.coinImg = document.createElement('img')
+    this.coinImg.src = 'images/coin.png';
+
+    this.scoreEle = document.querySelector('#Jscore')
+
+
     this.car = {
-      x: ~~((_this.canWitdh -50)/2),
-      y: _this.canHeight - 50,
-      width: 50,
-      height: 50
+      x: ~~((_this.canWitdh -100)/2),
+      y: _this.canHeight - 300,
+      width:100,
+      height:230
     };
-    // 障碍物
-    this.blocks = [
-      { 'x': 0, 'y': -50, 'width': 50, 'height': 50 },
-      { 'x': 50, 'y': 0, 'width': 50, 'height': 50 },
-      { 'x': 120, 'y': -50, 'width': 50, 'height': 50 },
-      { 'x': 180, 'y': 30, 'width': 50, 'height': 50 },
-      { 'x': 300, 'y': 50, 'width': 50, 'height': 50 },
-      { 'x': 250, 'y': 250, 'width': 50, 'height': 50 }
-    ];
-    this.speed = 2;
+
+    this.blocks = this.genBlocks()
 
     this.bindEvent()
   },
@@ -48,68 +105,84 @@ mod = {
     let car = this.car
 
     this.cxt.save();
-    this.cxt.fillRect(car.x, car.y, car.width, car.height);
+    this.cxt.drawImage(this.carImg, car.x, car.y, car.width, car.height);
 
-    for (var i = 0; i < (blocks.length); i++) {
+    for (let i = 0; i < (blocks.length); i++) {
       let curBlock = blocks[i]
-      this.cxt.fillRect(curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+      if (curBlock.coin) {
+        !curBlock.hide && this.cxt.drawImage(this.coinImg, curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+      }else{
+        this.cxt.drawImage(this.car0Img,curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+      }
 
-      // 四中情况完全不碰撞
+      // 只有四种情况完全不碰撞
       let b1 = (car.y >= (curBlock.y + curBlock.height)) // 汽车顶部大于块底部
       let b2 = ((car.y + car.height) <= curBlock.y) // 汽车底部小于块顶部
       let b3 = (car.x >= (curBlock.x + curBlock.width)) // 汽车左边大于块右边
       let b4 = ((car.x + car.width) <= curBlock.x) // 汽车右边小于块左边
 
       if (!(b1 || b2 || b3 || b4)) {
-        this.isStop = true;
+        if (curBlock.coin) {
+          if (!curBlock.hide) {
+            this.score += curBlock.coin
+            this.scoreEle && (this.scoreEle.innerHTML = this.score)
+          }
+          curBlock.hide = true
+        }else{
+          this.isStop = true;
+        }
       }
     }
     this.cxt.restore();
   },
-  step() {
-    var _blocks = [];
+  animate() {
     let blocks = this.blocks;
+    let _blocks = [];
 
-    for (var i = 0; i < blocks.length; i++) {
-      blocks[i].y += this.speed; // 每一帧修改之后 更新 _blocks
-      if (blocks[i].y < this.canHeight) {
-        _blocks.push(blocks[i]); // 屏幕内有多少个障碍物
+    for (let i = 0; i < blocks.length; i++) {
+      let curBlock = blocks[i];
+
+      curBlock.y += (curBlock.coin ? this.coinSpeed : curBlock.speed||this.speed);
+      if (curBlock.y < this.canHeight) {
+        _blocks.push(curBlock);
       }
     }
 
-    if (_blocks.length == 3 || !_blocks.length) {
-      let out = ~~(Math.random() * 3)+1; // 至少保证有一个缺口
-      for (let j = 0; j < 1; j++) {
-        if (j != out) {
-          _blocks.push({
-            'x': ~~(Math.random()* (this.canWitdh-50)),
-            'y': -(50 + ~~(Math.random()*100)),
-            'width': 50,
-            'height': 50
-          });
-        }
-      }
+    if (!_blocks.length) {
+      this.blocks = [] // 性能优化
+      this.blocks = this.genBlocks()
     }
-
-    this.blocks = _blocks; // 循环
   },
-  drawOver() {
-    let cxt = this.cxt;
-    cxt.save();
-    cxt.font = "20px Verdana";
-    cxt.fillStyle = 'pink';
-    cxt.fillText('游戏结束！', 75, 200);
-    cxt.restore();
+  gameOver() {
+    let text = '游戏结束'
+    this.cxt.save();
+    this.cxt.font = this.fontSize+"px Arial";
+    this.cxt.fillStyle = 'pink';
+    this.cxt.fillText(text, ~~((this.canWitdh - text.length*this.fontSize)/2), ~~((this.canHeight-this.fontSize)/2));
+    this.cxt.restore();
+  },
+  clearTimer(){
+    this.aniTimer && window.cancelAnimationFrame(this.aniTimer);
+    this.aniTimer = null
   },
   play(){
+    this.clearTimer() // 性能优化
     this.erase();
     this.draw();
-    this.step();
+    this.animate();
     if (this.isStop) {
-      window.cancelAnimationFrame(this.timer);
-      this.drawOver();
+      this.gameOver();
     } else {
-      this.timer = window.requestAnimationFrame(arguments.callee.bind(this));
+      this.aniTimer = window.requestAnimationFrame(arguments.callee.bind(this));
+    }
+  },
+  genTimer(keyCode,cb){
+    if (this.smooth) {
+      this[this.timerPreffix + keyCode] = setInterval(() => {
+        cb && cb()
+      },this.aniTimeGap)
+    }else{
+      cb && cb()
     }
   },
   bindEvent(){
@@ -119,60 +192,55 @@ mod = {
 
     document.onkeydown = ( (e)=> {
       let now = new Date();
+      let keyCode = e.which
 
       if (!_this.smooth) {
-        if (now.getTime() - last.getTime() < this.timeGap) {
+        if (now.getTime() - last.getTime() < this.keyBoardTimeGap) {
           return;
         }
         last = now;
       }
 
-      switch (e.which) {
-
-        case 40: // 下
-          if (!_this['timer_' + e.which]) {
+      if (!_this[_this.timerPreffix + keyCode]) {
+        switch (keyCode) {
+          case 40:
+          _this.genTimer(keyCode,()=>{
             if (car.y < (this.canHeight - car.height)) {
-              _this['timer_' + e.which] = setInterval(() => {
-                car.y += _this.smooth ||car.height;
-              }, 16);
+              car.y += _this.smooth ||car.height;
             }
-          }
+          })
           break;
-        case 39: // 右
-          if (!_this['timer_' + e.which]) {
+          case 39:
+          _this.genTimer(keyCode,()=>{
             if (car.x < (this.canWitdh-car.width)) {
-              _this['timer_' + e.which] = setInterval(() => {
-                car.x += _this.smooth ||car.width;
-              }, 16);
+              car.x += _this.smooth ||car.width;
             }
-          }
-
+          })
           break;
-        case 38: // 上
-          if (!_this['timer_' + e.which]) {
-            _this['timer_' + e.which] = setInterval(() => {
-              if (car.y > 0) {
-                car.y -= _this.smooth ||car.height;
-              }
-            }, 16);
-          }
+          case 38:
+          _this.genTimer(keyCode,()=>{
+            if (car.y > 0) {
+              car.y -= _this.smooth ||car.height;
+            }
+          })
           break;
-        case 37: // 左
-          if (!_this['timer_' + e.which]) {
-            _this['timer_' + e.which] = setInterval(() => {
-              if (car.x > 0) {
-                car.x -= _this.smooth ||car.width;
-              }
-            }, 16);
-          }
+          case 37:
+          _this.genTimer(keyCode,()=>{
+            if (car.x > 0) {
+              car.x -= _this.smooth ||car.width;
+            }
+          })
           break;
+        }
       }
     });
 
     document.onkeyup = ((e)=>{
-      if (_this['timer_' + e.which]) {
-        clearInterval(_this['timer_' + e.which])
-        _this['timer_' + e.which] = null
+      let keyCode = e.which
+      let tName = this.timerPreffix + keyCode
+      if (_this[tName]) {
+        clearInterval(_this[tName])
+        _this[tName] = null
       }
     })
   }
@@ -180,10 +248,12 @@ mod = {
 
 ;(() => {
   document.addEventListener('DOMContentLoaded', (e) => {
-    mod.init('#canvas')
+    mod.init('#Jgame')
+
     Jstart.addEventListener('click',(e)=>{
       mod.play()
     },false)
+
     Jstop.addEventListener('click', (e) => {
       mod.isStop = true
     }, false)
