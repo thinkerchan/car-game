@@ -6,8 +6,6 @@ let oBaseBlock = {
   height: 190
 }
 
-
-
 let mod = {
   aniTimer:null,
   isStop:false,
@@ -92,6 +90,17 @@ let mod = {
       width:100,
       height:230
     };
+
+    this.mouse = document.createElement('div')
+    this.mouse.classList.add('mouse')
+    this.mouse.style =`
+      position:absolute;
+      left:${~~((_this.canWitdh -100)/2)}px;
+      top: ${_this.canHeight - 300}px;
+      width:${100}px;
+      height:${230}px;
+      `
+    wrap.appendChild(this.mouse)
 
     this.blocks = this.genBlocks()
 
@@ -243,6 +252,10 @@ let mod = {
         _this[tName] = null
       }
     })
+
+    this.mouse.addEventListener('touchstart',(e)=>{
+      console.log(e);
+    },{passive:false})
   }
 }
 
