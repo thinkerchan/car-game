@@ -14,7 +14,22 @@ html,body{
 .can{
   box-shadow: 0 2px 2px #ccc;
   background-color: #f1f1f1;
+  background: url(./images/bg.jpg) no-repeat center top ;
+  background-size: 100%;
 }
+.can.ani{
+  animation: up 1s linear infinite;
+}
+@keyframes up{
+  0% {
+    background-position-y: -900px;
+  }
+
+  100% {
+    background-position-y: 0;
+  }
+}
+
 .score-wrap{
   /* width: 100px; */
   height: 40px;

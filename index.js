@@ -7,6 +7,7 @@ let oBaseBlock = {
 }
 
 let mod = {
+  dev:0,
   aniTimer:null,
   isStop:false,
   blocks:[],
@@ -23,6 +24,7 @@ let mod = {
     height:190
   },
   score:0,
+  roadWidth:500,  // 真实赛道宽度
   replay(){
     this.isStop = false;
     this.erase()
@@ -31,25 +33,42 @@ let mod = {
     let _this = this;
     return [
       {
+        coin: 0,
         x: ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
         y: -50 - ~~(Math.random()*200),
-        width: oBaseBlock.width,
-        height: oBaseBlock.height,
-        speed: _this.speed + ~~(Math.random()*3)
+        width: 241,
+        height: 155,
+        speed: _this.speed + ~~(Math.random()*3),
+        image:'./images/jingai.png',
+        name:'brick1',
       },
       {
+        coin: 0,
         x: ~~(docW / 2) + ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
         y: -250 - ~~(Math.random() * 200),
-        width: oBaseBlock.width,
-        height: oBaseBlock.height,
-        speed: _this.speed + ~~(Math.random()*4)
+        width: 173,
+        height: 97,
+        speed: _this.speed + ~~(Math.random()*4),
+        image: './images/xuegao.png',
+        name: 'brick2',
       },
       {
-        x: ~~((Math.random()*(~~(docW / oBaseBlock.width) )) * (1.5*oBaseBlock.width)),
-        y: -50 - (~~Math.random()*50),
-        width: 50,
-        height: 50,
-        coin: 10
+        coin: 20,
+        x: ~~((Math.random() * (~~(docW / oBaseBlock.width))) * (1.5 * oBaseBlock.width)),
+        y: -50 - (~~Math.random() * 50),
+        width: 77,
+        height: 89,
+        image:'./images/coin1.png',
+        name:'coin1',
+      },
+      {
+        coin: 20,
+        x: ~~((Math.random() * (~~(docW / oBaseBlock.width))) * (1.5 * oBaseBlock.width)),
+        y: -50 - (~~Math.random() * 50),
+        width: 59,
+        height: 93,
+        image: './images/coin2.png',
+        name:'coin2'
       }
     ];
   },
@@ -62,6 +81,8 @@ let mod = {
     let cxt = canvas.getContext('2d');
 
     canvas.classList.add('can')
+    // canvas.classList.add('ani')
+
     canvas.width = docW
     canvas.height = docH
 
@@ -75,20 +96,34 @@ let mod = {
     this.carImg = document.createElement('img')
     this.carImg.src = 'images/car.png';
 
-    this.car0Img = document.createElement('img')
-    this.car0Img.src = 'images/car0.png';
+    this.brickImg1 = document.createElement('img')
+    this.brickImg1.src = 'images/jingai.png';
 
-    this.coinImg = document.createElement('img')
-    this.coinImg.src = 'images/coin.png';
+    this.brickImg2 = document.createElement('img')
+    this.brickImg2.src = 'images/xuegao.png';
+
+    this.coinImg1 = document.createElement('img')
+    this.coinImg1.src = 'images/coin1.png';
+
+    this.coinImg2 = document.createElement('img')
+    this.coinImg2.src = 'images/coin2.png';
 
     this.scoreEle = document.querySelector('#Jscore')
 
+    this.coinObj = {
+      coin1:this.coinImg1,
+      coin2:this.coinImg2
+    }
+    this.brickObj = {
+      brick1:this.brickImg1,
+      brick2:this.brickImg2
+    }
 
     this.car = {
-      x: ~~((_this.canWitdh -100)/2),
-      y: _this.canHeight - 300,
-      width:100,
-      height:230
+      x: ~~((_this.canWitdh -135)/2),
+      y: _this.canHeight - 247,
+      width:135,
+      height:247
     };
 
     this.mouse = document.createElement('div')
@@ -102,8 +137,8 @@ let mod = {
       `
     wrap.appendChild(this.mouse)
 
-    this.blocks = this.genBlocks()
 
+    this.blocks = this.genBlocks()
     this.bindEvent()
   },
   erase() {
@@ -114,14 +149,27 @@ let mod = {
     let car = this.car
 
     this.cxt.save();
-    this.cxt.drawImage(this.carImg, car.x, car.y, car.width, car.height);
+
+    if (this.dev) {
+      this.cxt.fillRect(car.x, car.y, car.width, car.height);
+    }else{
+      this.cxt.drawImage(this.carImg, car.x, car.y, car.width, car.height);
+    }
 
     for (let i = 0; i < (blocks.length); i++) {
       let curBlock = blocks[i]
       if (curBlock.coin) {
-        !curBlock.hide && this.cxt.drawImage(this.coinImg, curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        if (this.dev) {
+          !curBlock.hide && this.cxt.fillRect(curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        }else{
+          !curBlock.hide && this.cxt.drawImage(this.coinObj[curBlock.name], curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        }
       }else{
-        this.cxt.drawImage(this.car0Img,curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        if (this.dev) {
+          this.cxt.fillRect(curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        }else{
+          this.cxt.drawImage(this.brickObj[curBlock.name],curBlock.x, curBlock.y, curBlock.width, curBlock.height);
+        }
       }
 
       // 只有四种情况完全不碰撞
@@ -166,7 +214,7 @@ let mod = {
     let text = '游戏结束'
     this.cxt.save();
     this.cxt.font = this.fontSize+"px Arial";
-    this.cxt.fillStyle = 'pink';
+    this.cxt.fillStyle = 'yellow';
     this.cxt.fillText(text, ~~((this.canWitdh - text.length*this.fontSize)/2), ~~((this.canHeight-this.fontSize)/2));
     this.cxt.restore();
   },
@@ -174,10 +222,14 @@ let mod = {
     this.aniTimer && window.cancelAnimationFrame(this.aniTimer);
     this.aniTimer = null
   },
+  clean(){
+    this.stop && this.stop()
+  },
   play(){
     this.clearTimer() // 性能优化
     this.erase();
     this.draw();
+    this.clean();
     this.animate();
     if (this.isStop) {
       this.gameOver();
@@ -255,7 +307,16 @@ let mod = {
 
     this.mouse.addEventListener('touchstart',(e)=>{
       console.log(e);
-    },{passive:false})
+    },false)
+
+    this.mouse.addEventListener('touchmove', (e) => {
+      // console.log(e);
+    }, false)
+
+    this.mouse.addEventListener('touchend', (e) => {
+      console.log(e);
+    }, false)
+
   }
 }
 
