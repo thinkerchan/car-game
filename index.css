@@ -11,22 +11,38 @@ html,body{
   position: relative;
 }
 
+#Jgame.ani::before{
+  animation: up .8s linear infinite;
+}
+#Jgame::before{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  content: '';
+  width: 750px;
+  height: 2808px;
+  z-index: 1;
+  background: url(./images/bgp.jpg) repeat-y center top ;
+  background-size: 750px 702px;
+}
+#Jgame.ani-paused::before{
+  animation-play-state:paused;
+}
+
 .can{
-  box-shadow: 0 2px 2px #ccc;
-  background-color: #f1f1f1;
-  background: url(./images/bg.jpg) no-repeat center top ;
-  background-size: 100%;
+  margin: 0 auto;
+  display: block;
+  position: relative;
+  z-index: 5;
 }
-.can.ani{
-  animation: up 1s linear infinite;
-}
+
 @keyframes up{
   0% {
-    background-position-y: -900px;
+    bottom:0
   }
 
   100% {
-    background-position-y: 0;
+    bottom:-702px
   }
 }
 
@@ -39,6 +55,13 @@ html,body{
   right: 0;
   font-size: 28px;
   color: #333;
+}
+
+.mouse-wrap{
+  position: absolute;
+}
+.mouse{
+  /* background-color: rgba(0,0,0,0.2); */
 }
 
 .btn-wrap{
@@ -63,7 +86,4 @@ html,body{
   border-radius: 5px;
   box-shadow: 0 2px 2px #8A2BE2;
   display: block;
-}
-.mouse{
-  background-color: rgba(0,0,0,0.2);
 }

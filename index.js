@@ -1,89 +1,124 @@
 const docW = document.documentElement.clientWidth
 const docH = document.documentElement.clientHeight
 
-let oBaseBlock = {
-  width: 90,
-  height: 190
-}
-
 let mod = {
+  playing:null,
   dev:0,
   aniTimer:null,
+  speedTimer:null,
   isStop:false,
   blocks:[],
-  speed:4,
-  coinSpeed:6,
-  car:null,
-  smooth:8,  // 汽车移动速度
+  useKeyboard:false,
+  smooth:8,  // 使用键盘时,汽车移动速度
   keyBoardTimeGap:100,
   aniTimeGap:16,
   timerPreffix:'timer_',
   fontSize:40,
-  baseBlock:{
-    width:90,
-    height:190
-  },
   score:0,
-  roadWidth:500,  // 真实赛道宽度
-  replay(){
-    this.isStop = false;
-    this.erase()
+  roadWidth:540,  // 真实赛道宽度
+  padding(){
+    return (docW - this.roadWidth)/2
+  },
+  car:{
+    width: 120,
+    height: 240
   },
   genBlocks() {
     let _this = this;
+    // 障碍物和金币要落在赛道宽度
+    let half = ~~(this.roadWidth/2)
     return [
       {
-        coin: 0,
-        x: ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
-        y: -50 - ~~(Math.random()*200),
+        name:'brick1',
         width: 241,
         height: 155,
-        speed: _this.speed + ~~(Math.random()*3),
+        x: ~~(Math.random() * 2) * half + ~~((half - 241) / 2),
+        y: (!_this.playing? -(docH*0.5):0) -155 ,
+        speed: _this.speed ,
         image:'./images/jingai.png',
-        name:'brick1',
       },
       {
-        coin: 0,
-        x: ~~(docW / 2) + ~~(Math.random() * (docW / 2 - oBaseBlock.width)),
-        y: -250 - ~~(Math.random() * 200),
+        name: 'brick2',
         width: 173,
         height: 97,
-        speed: _this.speed + ~~(Math.random()*4),
+        x: ~~(Math.random() * 2) * half + ~~((half-173)/2),
+        y: (!_this.playing? -(docH*0.5):0) - ((~~(Math.random() * 10)+3) * _this.car.height),
+        speed: _this.speed ,
         image: './images/xuegao.png',
-        name: 'brick2',
       },
       {
-        coin: 20,
-        x: ~~((Math.random() * (~~(docW / oBaseBlock.width))) * (1.5 * oBaseBlock.width)),
-        y: -50 - (~~Math.random() * 50),
+        name:'coin1',
+        coin: 1,
         width: 77,
         height: 89,
+        x: ~~(Math.random() * 2) * half + ~~((half - 77) / 2),
+        y: (!_this.playing? -(docH*0.5):0) - (~~Math.random() * 10),
+        speed:_this.speed+(~~Math.random()*10),
         image:'./images/coin1.png',
-        name:'coin1',
       },
       {
-        coin: 20,
-        x: ~~((Math.random() * (~~(docW / oBaseBlock.width))) * (1.5 * oBaseBlock.width)),
-        y: -50 - (~~Math.random() * 50),
+        name:'coin2',
+        coin: 1,
         width: 59,
         height: 93,
+        x: ~~(Math.random() * 2) * half + ~~((half - 59) / 2),
+        y: (!_this.playing? -(docH*0.5):0) - (~~Math.random() * 300)-800,
+        speed:_this.speed+(~~Math.random()*4)+2,
         image: './images/coin2.png',
-        name:'coin2'
       }
     ];
   },
-  init(ele){
+  speedUp(){
+    this.speedTimer = setInterval(() => {
+      this.speed++
+    }, 4000);
+  },
+  initStatus(){
     let _this = this;
+    this.speed = 16;
+    this.playing = false
+    this.car.x = ~~((this.canWitdh - this.car.width) / 2)
+    this.car.y = this.canHeight - this.car.height - this.padding()
 
+    this.mouse.style = `
+      position:absolute;
+      left:${_this.car.x}px;
+      top: ${_this.car.y}px;
+      width:${_this.car.width}px;
+      height:${_this.car.height}px;
+    `
+    this.blocks = this.genBlocks()
+    this.score = 0
+  },
+  init(config){
+    if (!config.ele) {
+      alert('缺少容器')
+      return;
+    }
 
-    let wrap = document.querySelector(ele)
+    config.scoreUpdate && (this.scoreUpdate = config.scoreUpdate)
+    config.gameOver && (this._gameOver = config.gameOver)
+
+    let wrap = document.querySelector(config.ele)
     let canvas = document.createElement('canvas');
     let cxt = canvas.getContext('2d');
 
-    canvas.classList.add('can')
-    // canvas.classList.add('ani')
+    let emptyDiv = document.createElement('div');
+    emptyDiv.classList.add('mouse-wrap')
+    emptyDiv.style = `
+      position:absolute;
+      left: ${(docW - this.roadWidth)/2}px;
+      top:0;
+      width:${this.roadWidth}px;
+      height:${docH}px;
+      z-index:10;
+    `
+    this.wrap = wrap
+    wrap.appendChild(emptyDiv)
 
-    canvas.width = docW
+    canvas.classList.add('can')
+
+    canvas.width = this.roadWidth
     canvas.height = docH
 
     wrap.appendChild(canvas)
@@ -108,8 +143,6 @@ let mod = {
     this.coinImg2 = document.createElement('img')
     this.coinImg2.src = 'images/coin2.png';
 
-    this.scoreEle = document.querySelector('#Jscore')
-
     this.coinObj = {
       coin1:this.coinImg1,
       coin2:this.coinImg2
@@ -119,27 +152,16 @@ let mod = {
       brick2:this.brickImg2
     }
 
-    this.car = {
-      x: ~~((_this.canWitdh -135)/2),
-      y: _this.canHeight - 247,
-      width:135,
-      height:247
-    };
-
     this.mouse = document.createElement('div')
     this.mouse.classList.add('mouse')
-    this.mouse.style =`
-      position:absolute;
-      left:${~~((_this.canWitdh -100)/2)}px;
-      top: ${_this.canHeight - 300}px;
-      width:${100}px;
-      height:${230}px;
-      `
-    wrap.appendChild(this.mouse)
+
+    this.initStatus()
+
+    emptyDiv.appendChild(this.mouse)
 
 
-    this.blocks = this.genBlocks()
     this.bindEvent()
+    this.speedUp()
   },
   erase() {
     this.cxt.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -182,24 +204,34 @@ let mod = {
         if (curBlock.coin) {
           if (!curBlock.hide) {
             this.score += curBlock.coin
-            this.scoreEle && (this.scoreEle.innerHTML = this.score)
+            this.scoreUpdate && this.scoreUpdate(this.score)
           }
           curBlock.hide = true
         }else{
           this.isStop = true;
+
+          clearInterval(this.speedTimer)
+          this.speedTimer = null
         }
       }
     }
     this.cxt.restore();
+
+    if (this.useKeyboard) {
+      this.mouse.style.cssText += `
+        left:${car.x}px;
+        top:${car.y}px;
+      `
+    }
   },
   animate() {
     let blocks = this.blocks;
-    let _blocks = [];
+    let _blocks = []; // 用来计算当前屏幕有多少个障碍物
 
     for (let i = 0; i < blocks.length; i++) {
       let curBlock = blocks[i];
 
-      curBlock.y += (curBlock.coin ? this.coinSpeed : curBlock.speed||this.speed);
+      curBlock.y += curBlock.speed;
       if (curBlock.y < this.canHeight) {
         _blocks.push(curBlock);
       }
@@ -211,25 +243,36 @@ let mod = {
     }
   },
   gameOver() {
-    let text = '游戏结束'
-    this.cxt.save();
-    this.cxt.font = this.fontSize+"px Arial";
-    this.cxt.fillStyle = 'yellow';
-    this.cxt.fillText(text, ~~((this.canWitdh - text.length*this.fontSize)/2), ~~((this.canHeight-this.fontSize)/2));
-    this.cxt.restore();
+    this.wrap.classList.add('ani-paused')
+    if (this._gameOver) {
+      this._gameOver()
+    }
+
+    if (this.dev) {
+      let text = '游戏结束'
+      this.cxt.save();
+      this.cxt.font = this.fontSize+"px Arial";
+      this.cxt.fillStyle = 'yellow';
+      this.cxt.fillText(text, ~~((this.canWitdh - text.length*this.fontSize)/2), ~~((this.canHeight-this.fontSize)/2));
+      this.cxt.restore();
+    }
   },
   clearTimer(){
     this.aniTimer && window.cancelAnimationFrame(this.aniTimer);
     this.aniTimer = null
   },
-  clean(){
-    this.stop && this.stop()
+  replay(){
+    this.initStatus()
+    this.isStop = false
+    this.play()
   },
   play(){
+    this.wrap.classList.remove('ani-paused')
+    this.wrap.classList.add('ani')
+    this.playing = true
     this.clearTimer() // 性能优化
     this.erase();
     this.draw();
-    this.clean();
     this.animate();
     if (this.isStop) {
       this.gameOver();
@@ -251,7 +294,11 @@ let mod = {
     let car = this.car
     let _this = this;
 
-    document.onkeydown = ( (e)=> {
+    document.body.addEventListener('touchmove',(e)=>{
+      e.preventDefault()
+    },{passive:false})
+
+    this.useKeyboard && (document.onkeydown = ( (e)=> {
       let now = new Date();
       let keyCode = e.which
 
@@ -293,36 +340,84 @@ let mod = {
           })
           break;
         }
-      }
-    });
 
-    document.onkeyup = ((e)=>{
+
+      }
+    }))
+
+    this.useKeyboard && (document.onkeyup = ((e)=>{
       let keyCode = e.which
       let tName = this.timerPreffix + keyCode
       if (_this[tName]) {
         clearInterval(_this[tName])
         _this[tName] = null
       }
-    })
+    }))
 
+    let disX = 0, disY = 0;
     this.mouse.addEventListener('touchstart',(e)=>{
-      console.log(e);
+      let fingerPos = e.targetTouches[0]
+      let mouseRect = this.mouse.getBoundingClientRect()
+      disX = fingerPos.pageX - mouseRect.left;
+      disY = fingerPos.pageY - mouseRect.top;
     },false)
 
     this.mouse.addEventListener('touchmove', (e) => {
-      // console.log(e);
-    }, false)
+      if (this.isStop || !this.playing) {
+        return
+      }
 
-    this.mouse.addEventListener('touchend', (e) => {
-      console.log(e);
-    }, false)
+      let fingerPos = e.targetTouches[0]
 
+      let carLeft = fingerPos.pageX - disX
+      let carTop = fingerPos.pageY - disY
+
+      let carMaxX = _this.roadWidth - _this.car.width
+      let carMaxY = docH - _this.car.height
+
+      let _left = carLeft - _this.padding()
+      let _top = carTop
+
+
+      if (_left < 0) {
+        _left = 0
+      }
+      if (_left > carMaxX) {
+        _left = carMaxX
+      }
+
+      if (carTop <=0) {
+        _top = 0
+      }
+
+      if (carTop > carMaxY) {
+        _top = carMaxY
+      }
+
+      this.mouse.style.cssText +=`
+        left:${_left}px;
+        top:${_top}px;
+      `
+
+      car.x = _left
+      car.y = _top
+
+    }, false)
   }
 }
 
 ;(() => {
   document.addEventListener('DOMContentLoaded', (e) => {
-    mod.init('#Jgame')
+    mod.init({
+      ele:'#Jgame',
+      scoreUpdate(score){
+        console.log(score);
+      },
+      gameOver(){
+        console.log('游戏结束');
+      }
+    })
+
 
     Jstart.addEventListener('click',(e)=>{
       mod.play()
@@ -330,6 +425,10 @@ let mod = {
 
     Jstop.addEventListener('click', (e) => {
       mod.isStop = true
+    }, false)
+
+    Jreplay.addEventListener('click', (e) => {
+      mod.replay()
     }, false)
   }, false)
 })()
