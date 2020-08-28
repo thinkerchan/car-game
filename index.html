@@ -9,12 +9,46 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body οncοntextmenu="return false">
-  <div id="Jgame"></div>
+  <div id="Jgame">
+    <div class="score-wrap">分数:<i id="Jscore">0</i> </div>
+  </div>
   <div class="btn-wrap">
     <div id="Jstart" class="btn-start">开始</div>
     <div id="Jstop" class="btn-start">停止</div>
     <div id="Jreplay" class="btn-start">重玩</div>
   </div>
-  <script src="index.js?v=111"></script>
+  <script src="index.js"></script>
+  <script>
+    ; (() => {
+      document.addEventListener('DOMContentLoaded', (e) => {
+        Game.init({
+          ele: '#Jgame',
+          speed: 20,
+          speedPadding: 2,
+          scoreUpdate(score) {
+            console.log(score);
+
+            Jscore.innerHTML = score
+          },
+          gameOver() {
+            console.log('游戏结束');
+          }
+        })
+
+        Jstart.addEventListener('click', (e) => {
+          Game.play()
+        }, false)
+
+        Jstop.addEventListener('click', (e) => {
+          Game.isStop = true
+        }, false)
+
+        Jreplay.addEventListener('click', (e) => {
+          Game.replay()
+        }, false)
+      }, false)
+    })()
+
+  </script>
 </body>
 </html>
