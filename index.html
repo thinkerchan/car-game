@@ -9,9 +9,7 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body οncοntextmenu="return false">
-  <div id="Jgame">
-    <div class="score-wrap">分数:<i id="Jscore">0</i> </div>
-  </div>
+  <div id="Jgame"></div>
   <div class="btn-wrap">
     <div id="Jstart" class="btn-start">开始</div>
     <div id="Jstop" class="btn-start">停止</div>
@@ -26,9 +24,7 @@
           speed: 20,
           speedPadding: 2,
           scoreUpdate(score) {
-            console.log(score);
-
-            Jscore.innerHTML = score
+            console.log('分数:',score);
           },
           gameOver() {
             console.log('游戏结束');

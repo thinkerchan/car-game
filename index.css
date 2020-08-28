@@ -47,7 +47,6 @@ html,body{
 }
 
 .score-wrap{
-  /* width: 100px; */
   height: 40px;
   line-height: 40px;
   position: absolute;
@@ -63,9 +62,6 @@ html,body{
 
 .mouse-wrap{
   position: absolute;
-}
-.mouse{
-  /* background-color: rgba(0,0,0,0.2); */
 }
 
 .btn-wrap{

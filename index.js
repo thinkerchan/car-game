@@ -1,6 +1,7 @@
 (()=>{
-  const docW = document.documentElement.clientWidth
-  const docH = document.documentElement.clientHeight
+  const doc = document
+  const docW = doc.documentElement.clientWidth
+  const docH = doc.documentElement.clientHeight
 
   let mod = {
     playing:null,
@@ -49,15 +50,6 @@
           speed: _this.speed ,
           image: './images/xuegao.png',
         },
-        // {
-        //   name: 'brick2',
-        //   width: 173,
-        //   height: 97,
-        //   x: (1-coinRadom) * half + ~~((half - 173) / 2),
-        //   y: (!_this.playing ? -(docH * 0.5) : 0) -   3*_this.car.height,
-        //   speed: _this.speed,
-        //   image: './images/xuegao.png',
-        // },
         {
           name:'coin1',
           coin: 1,
@@ -120,11 +112,11 @@
       config.gameOver && (this._gameOver = config.gameOver)
       this.speedPadding = config.speedPadding || 1
 
-      let wrap = document.querySelector(config.ele)
-      let canvas = document.createElement('canvas');
+      let wrap = doc.querySelector(config.ele)
+      let canvas = doc.createElement('canvas');
       let cxt = canvas.getContext('2d');
 
-      let emptyDiv = document.createElement('div');
+      let emptyDiv = doc.createElement('div');
       emptyDiv.classList.add('mouse-wrap')
       emptyDiv.style = `
         position:absolute;
@@ -149,19 +141,19 @@
       this.canWitdh = canvas.width
       this.canHeight = canvas.height
 
-      this.carImg = document.createElement('img')
+      this.carImg = doc.createElement('img')
       this.carImg.src = 'images/car.png';
 
-      this.brickImg1 = document.createElement('img')
+      this.brickImg1 = doc.createElement('img')
       this.brickImg1.src = 'images/jingai.png';
 
-      this.brickImg2 = document.createElement('img')
+      this.brickImg2 = doc.createElement('img')
       this.brickImg2.src = 'images/xuegao.png';
 
-      this.coinImg1 = document.createElement('img')
+      this.coinImg1 = doc.createElement('img')
       this.coinImg1.src = 'images/coin1.png';
 
-      this.coinImg2 = document.createElement('img')
+      this.coinImg2 = doc.createElement('img')
       this.coinImg2.src = 'images/coin2.png';
 
       this.coinObj = {
@@ -173,7 +165,7 @@
         brick2:this.brickImg2
       }
 
-      this.mouse = document.createElement('div')
+      this.mouse = doc.createElement('div')
       this.mouse.classList.add('mouse')
 
       this.initStatus(config.speed)
@@ -309,11 +301,11 @@
       let car = this.car
       let _this = this;
 
-      document.body.addEventListener('touchmove',(e)=>{
+      doc.body.addEventListener('touchmove',(e)=>{
         e.preventDefault()
       },{passive:false})
 
-      this.useKeyboard && (document.onkeydown = ( (e)=> {
+      this.useKeyboard && (doc.onkeydown = ( (e)=> {
         let now = new Date();
         let keyCode = e.which
 
@@ -360,7 +352,7 @@
         }
       }))
 
-      this.useKeyboard && (document.onkeyup = ((e)=>{
+      this.useKeyboard && (doc.onkeyup = ((e)=>{
         let keyCode = e.which
         let tName = this.timerPreffix + keyCode
         if (_this[tName]) {
