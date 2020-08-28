@@ -83,7 +83,6 @@
       }, 4000);
     },
     initStatus(speed){
-      let _this = this;
       !this.originalSpeed && (this.originalSpeed = speed)
       this.speed = speed;
       this.playing = false
@@ -92,10 +91,10 @@
 
       this.mouse.style = `
         position:absolute;
-        left:${_this.car.x}px;
-        top: ${_this.car.y}px;
-        width:${_this.car.width}px;
-        height:${_this.car.height}px;
+        left:${this.car.x}px;
+        top: ${this.car.y}px;
+        width:${this.car.width}px;
+        height:${this.car.height}px;
       `
       this.blocks = this.genBlocks()
       this.score = 0
@@ -142,7 +141,7 @@
       this.canHeight = canvas.height
 
       this.carImg = doc.createElement('img')
-      this.carImg.src = 'images/car.png';
+      this.carImg.src = !config.type ? 'images/blue.png' : 'images/red.png';
 
       this.brickImg1 = doc.createElement('img')
       this.brickImg1.src = 'images/jingai.png';
