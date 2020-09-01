@@ -33,7 +33,6 @@
           },
           gameOver() {
             console.log('游戏结束');
-            Jscore.innerHTML = '0'
           }
         })
 
@@ -42,6 +41,7 @@
         }, false)
 
         Jreplay.addEventListener('click', (e) => {
+          Jscore.innerHTML = '0'
           Game.replay()
         }, false)
       }, false)
