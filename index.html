@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>h5赛车小游戏</title>
+  <title>赛车小游戏</title>
   <script>
     !function (a) { var b, c; /Android (\d+\.\d+)/.test(navigator.userAgent) ? (b = parseFloat(RegExp.$1), b > 2.3 ? (c = parseInt(window.screen.width) / a, document.write('<meta name="viewport" content="width=' + a + ",minimum-scale=" + c + ",maximum-scale=" + c + ', target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',user-scalable=no,target-densitydpi=device-dpi,minimal-ui,viewport-fit=cover">') }(750);
   </script>
   <link rel="stylesheet" href="index.css">
 </head>
 <body οncοntextmenu="return false">
-  <div id="Jgame"></div>
+  <div id="Jgame">
+    <div class="score-wrap">
+      分数: <span id="Jscore">0</span>
+    </div>
+  </div>
   <div class="btn-wrap">
     <div id="Jstart" class="btn-start">开始</div>
-    <div id="Jstop" class="btn-start">停止</div>
     <div id="Jreplay" class="btn-start">重玩</div>
   </div>
   <script src="index.js"></script>
@@ -26,6 +29,7 @@
           speedPadding: 2,
           scoreUpdate(score) {
             console.log('分数:',score);
+            Jscore.innerHTML = score
           },
           gameOver() {
             console.log('游戏结束');
@@ -34,10 +38,6 @@
 
         Jstart.addEventListener('click', (e) => {
           Game.play()
-        }, false)
-
-        Jstop.addEventListener('click', (e) => {
-          Game.isStop = true
         }, false)
 
         Jreplay.addEventListener('click', (e) => {
