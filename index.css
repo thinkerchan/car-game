@@ -88,3 +88,16 @@ html,body{
   box-shadow: 0 2px 2px #8A2BE2;
   display: block;
 }
+.checker{
+  position: fixed;
+  background-color: #000;
+  z-index: 1000;
+  display: none;
+}
+.dCan{
+  position: absolute;
+  top:0;
+  left: 0;
+  z-index: 999;
+  background-color: #ccc;
+}
