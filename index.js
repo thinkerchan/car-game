@@ -175,6 +175,7 @@
         clearCache(){
           localStorage.clear()
           this.username = ''
+          this.iptDisable = false;
         }
       },
     })
