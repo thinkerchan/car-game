@@ -7,46 +7,61 @@
     !function (a) { var b, c; /Android (\d+\.\d+)/.test(navigator.userAgent) ? (b = parseFloat(RegExp.$1), b > 2.3 ? (c = parseInt(window.screen.width) / a, document.write('<meta name="viewport" content="width=' + a + ",minimum-scale=" + c + ",maximum-scale=" + c + ', target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',target-densitydpi=device-dpi">')) : document.write('<meta name="viewport" content="width=' + a + ',user-scalable=no,target-densitydpi=device-dpi,minimal-ui,viewport-fit=cover">') }(750);
   </script>
   <link rel="stylesheet" href="index.css">
+
 </head>
 <body οncοntextmenu="return false">
-  <div id="Jgame">
-    <div class="score-wrap">
-      分数: <span id="Jscore">0</span>
+  <div id="Jbody">
+    <div id="Jgame">
+      <div class="score-wrap">当前得分: <span id="Jscore">{{score}}</span></div>
     </div>
+
+    <div class="page-cover" v-show="showCover">
+      <div class="cover-top">
+        <p class="title">游戏结束</p>
+        <p class="rank">本次得分: {{score}} 分</p>
+        <p class="rank">历史最佳: {{bestScore}} 分</p>
+      </div>
+      <div class="cover-btn-wrap">
+        <span class="cover-btn rank" @click.stop="showRank">排行榜</span>
+        <span class="cover-btn replay" @click.stop="replay">重 玩</span>
+      </div>
+      <div class="rank-pop" :class="{show:showRankPop}">
+        <p class="rank-pop-tit">😆只列前50名玩家</p>
+        <ul class="rank-pop-list">
+          <li class="rank-pop-item" v-for="(item, index) in rankListArr">
+            <span class="index">{{index+1}}</span>
+            <span class="username">{{item.username}}</span>
+            <span class="score">{{item.score}} 分</span>
+          </li>
+        </ul>
+        <div class="close-rank-pop"  @click="closeRankPop">关闭</div>
+      </div>
+    </div>
+
+    <div class="init-cover" v-show="showInitCover">
+      <img src="images/zxy.jpg" class="img">
+      <p class="init-txt">有种来单挑... {{progress}}%</p>
+
+      <div class="mod-pre" :class="{show:showModPre}">
+        <input type="text" class="ipt" placeholder="起名不骚, 没人看到" v-model="username" :disabled="iptDisable">
+        <div class="start-btn-wrap"  :class="{show:showStartBtn}">
+          <img src="images/start.png" @click="prePlay" class="start-btn">
+        </div>
+      </div>
+
+      <p class="init-author">
+        <a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzI5NDE4NTAzOQ==&scene=110#wechat_redirect">@测试狗</a>
+        <span class="clear-btn" @click="clearCache" :class="{show:showClearBtn}"> 清除缓存</span>
+      </p>
+    </div>
+    <div class="g-loading" v-show="isLoading"></div>
+    <div class="toast" :class="{show:showToast}">{{toastStr}}</div>
   </div>
-  <div class="btn-wrap">
-    <div id="Jstart" class="btn-start">开始</div>
-    <div id="Jreplay" class="btn-start">重玩</div>
-  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@3.10.0/dist/av-min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/PreloadJS/1.0.1/preloadjs.min.js"></script>
+  <script src="game.js"></script>
   <script src="index.js"></script>
-  <script>
-    ; (() => {
-      document.addEventListener('DOMContentLoaded', (e) => {
-        Game.init({
-          ele: '#Jgame',
-          type:1, // 0:蓝色车,1:红色车
-          speed: 20,
-          speedPadding: 2,
-          scoreUpdate(score) {
-            console.log('分数:',score);
-            Jscore.innerHTML = score
-          },
-          gameOver() {
-            console.log('游戏结束');
-          }
-        })
-
-        Jstart.addEventListener('click', (e) => {
-          Game.play()
-        }, false)
-
-        Jreplay.addEventListener('click', (e) => {
-          Jscore.innerHTML = '0'
-          Game.replay()
-        }, false)
-      }, false)
-    })()
-
-  </script>
 </body>
 </html>
