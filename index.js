@@ -1,6 +1,6 @@
 ; (() => {
   document.addEventListener('DOMContentLoaded', (e) => {
-    window.vm = new Vue({
+    new Vue({
       el: '#Jbody',
       data:{
         appId: 'aReBgXf9QvnhftVdkKtkadp3-gzGzoHsz',
@@ -17,7 +17,7 @@
         showRankPop:false,
         rankListArr:[],
         isLoading:false,
-        toastStr:'',
+        toastStr:'兄弟, 要不先搞个名字吧?',
         showToast:false,
         iptDisable:false,
         showModPre:false,
@@ -58,7 +58,6 @@
         prePlay(){
           let u = this.cacheName || this.username.trim()
           if (!u) {
-            this.toastStr = '兄弟, 要不先搞个名字吧?'
             this.showToast = true
             let t = setTimeout(() => {
               clearTimeout(t)
@@ -108,7 +107,7 @@
         chechRank(){
           this.isLoading = true
           this.queryBestScore(null,(bestScore,needUpload,id)=>{
-            console.log('当前分数:',this.score, '历史最高:',bestScore,'是否需要上报:',needUpload);
+            // console.log('当前分数:',this.score, '历史最高:',bestScore,'是否需要上报:',needUpload);
             if (needUpload) {
               this.uploadRank(bestScore,id)
             }else{
@@ -129,7 +128,6 @@
           instance.set('score', bestScore);
           instance.save().then((ret) => {
             this.isLoading = false
-            localStorage.setItem('lsRecord',1)
           },  (err)=>{
             console.log(err);
             this.isLoading = false
@@ -141,7 +139,6 @@
           query.equalTo('username', username||this.username);
           query.descending('score')
           query.find().then((ret) => {
-            console.log(username || this.username,'的记录:',ret);
             let id = '';
             if (ret.length) {
               id = ret[0].id
@@ -164,16 +161,14 @@
           query.descending('score')
           query.limit(50);
           query.find().then((ret) => {
-            this.isLoading = false;
-
             this.rankListArr = ret.map((item,index)=>{
               return {
                 username: item.get('username'),
                 score: item.get('score'),
               }
             })
-
             this.showRankPop = true;
+            this.isLoading = false;
           })
         },
         replay(){
