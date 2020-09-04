@@ -253,6 +253,7 @@ html,body,div,span,p,em,i,ul,li,ol{
 }
 .rank-pop-item .score{
   text-align: center;
+  padding-left: 10px;
 }
 
 .close-rank-pop{

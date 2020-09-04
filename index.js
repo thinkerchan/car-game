@@ -24,10 +24,9 @@
         showClearBtn:false,
       },
       created () {
-        let username = localStorage.getItem('lsUserName')
-        if (username) {
-          this.fromCache = true
-          this.username = username
+        this.cacheName = localStorage.getItem('lsUserName')
+        if (this.cacheName) {
+          this.username = this.cacheName
           this.iptDisable = true
         }
 
@@ -52,13 +51,12 @@
         });
         queue.on("complete", ()=>{
           this.init()
-          this.showModPre = true
-          this.showStartBtn = true;
+
         });
       },
       methods: {
         prePlay(){
-          let u = this.username.trim()
+          let u = this.cacheName || this.username.trim()
           if (!u) {
             this.toastStr = '兄弟, 要不先搞个名字吧?'
             this.showToast = true
@@ -67,9 +65,10 @@
               t = null
               this.showToast = false
             }, 1000);
+
             return;
           }else{
-            if (!this.fromCache) {
+            if (!this.cacheName) {
               this.username = u.slice(0,15);
               localStorage.setItem('lsUserName', this.username)
             }
@@ -83,6 +82,9 @@
           }, 500);
         },
         init() {
+          this.showModPre = true
+          this.showStartBtn = true;
+
           let _this = this;
           Game.init({
             ele: '#Jgame',
@@ -105,69 +107,55 @@
         },
         chechRank(){
           this.isLoading = true
-          if (!this.fromCache) { // 第一次进来, 需要上报结果
-            console.log('首次进入');
-            this.bestScore = this.score
-            this.uploadRank(this.bestScore)
+          this.queryBestScore(null,(bestScore,needUpload,id)=>{
+            console.log('当前分数:',this.score, '历史最高:',bestScore,'是否需要上报:',needUpload);
+            if (needUpload) {
+              this.uploadRank(bestScore,id)
+            }else{
+              this.isLoading = false
+            }
+          })
+        },
+        uploadRank(bestScore,id){
+          let instance = null;
+          if (id) {
+            instance = AV.Object.createWithoutData(this.dataBase,id)
           }else{
-            console.log('非首次进入,符合条件再上报分数');
-
-            this.queryBestScore(null,(bestScore)=>{ // 非首次进入, 则先对比分数是否超越最佳分数,否则不予上报
-              console.log('当前bestscore:', bestScore);
-
-              if (this.score > bestScore) {
-                this.uploadRank(this.score)
-              }else{
-                this.isLoading = false
-              }
-            })
+            let av = AV.Object.extend(this.dataBase);
+            instance = new av();
+            instance.set('username', this.username);
           }
 
-        },
-        uploadRank(bestScore){
-          localStorage.setItem('lsBestScore', bestScore)
-
-          let av = AV.Object.extend(this.dataBase);
-          let instance = new av();
-          instance.set('username', this.username);
           instance.set('score', bestScore);
-
           instance.save().then((ret) => {
             this.isLoading = false
+            localStorage.setItem('lsRecord',1)
           },  (err)=>{
             console.log(err);
             this.isLoading = false
           });
         },
         queryBestScore(username,cb){
-
-          let cache = +localStorage.getItem('lsBestScore')
-          if (cache) {
-            if (this.score - cache > 0) {
-              cb && cb(this.score)
-              localStorage.setItem('lsBestScore', this.score)
-            }else{
-              cb && cb(cache)
-            }
-            return
-          }
-
+          // 最佳分数不适合做缓存,有可能服务器删除了记录,缓存判断的存在,会导致用户无法提交最新记录
           let query = new AV.Query(this.dataBase);
           query.equalTo('username', username||this.username);
           query.descending('score')
           query.find().then((ret) => {
-            if (ret.length) { // 防止删除数据库,客户端还有用户名缓存
+            console.log(username || this.username,'的记录:',ret);
+            let id = '';
+            if (ret.length) {
+              id = ret[0].id
               this.bestScore = ret[0].get('score')
             }else{
               this.bestScore = 0;
             }
 
-            if (this.score - this.bestScore>0) {
+            let bool = this.score - this.bestScore > 0
+            if (bool) {
               this.bestScore = this.score
             }
 
-            localStorage.setItem('lsBestScore',this.bestScore)
-            cb && cb(this.bestScore)
+            cb && cb(this.bestScore, bool,id)
           })
         },
         showRank(){
@@ -196,7 +184,6 @@
           this.showRankPop = false;
         },
         clearCache(){
-          this.fromCache = false;
           localStorage.clear();
           this.username = '';
           this.iptDisable = false;
