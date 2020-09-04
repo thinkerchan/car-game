@@ -18,6 +18,7 @@
     fontSize: 40,
     score: 0,
     roadWidth: 540,  // 真实赛道宽度
+    usePixelCheck: true,
     padding() {
       return (docW - this.roadWidth) / 2
     },
@@ -176,6 +177,61 @@
 
       this.bindEvent()
     },
+    getCrossRect(A, B, C, D, E, F, G, H) { // 只有四种情况完全不碰撞
+      let _b1 = C <= E; // 障碍物右边小于车左边
+      let _b2 = G <= A; // 车右边小于障碍物左边
+      let _b3 = H <= B  // 车底部小于等于障碍物顶部
+      let _b4 = D <= F; // 障碍物底部小于车顶部
+      if (_b1 || _b2 || _b3 || _b4) {
+        return [0, 0, 0, 0]
+      }
+
+      let tmpX, tmpY;
+      if (E > A) {
+        tmpX = G < C ? [E, G] : [E, C];
+      } else {
+        tmpX = C < G ? [A, C] : [A, G];
+      }
+
+      if (F > B) {
+        tmpY = H < D ? [F, H] : [F, D];
+      } else {
+        tmpY = D < H ? [B, D] : [B, H];
+      }
+      return [tmpX[0], tmpY[0], tmpX[1], tmpY[1]];
+    },
+    pixelCheck(obj1, obj2, rect) {
+      let canvas = doc.createElement('canvas'),
+        _ctx = canvas.getContext('2d');
+
+      canvas.width = docW
+      canvas.height = docH
+
+      _ctx.drawImage(obj1.img, 0, 0, obj1.w, obj1.h);
+      _ctx.globalCompositeOperation = 'source-in';
+      _ctx.drawImage(obj2.img, obj2.x - obj1.x, obj2.y - obj1.y, obj2.w, obj2.h);
+
+      let data = _ctx.getImageData(
+        rect[0] - obj1.x,
+        rect[1] - obj1.y,
+        Math.ceil(rect[2] - rect[0]),
+        Math.ceil(rect[3] - rect[1])
+      ).data;
+
+      canvas.remove()
+      canvas = null;
+      _ctx = null;
+
+      let res = false
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i]) {
+          res = true;
+          break;
+        }
+      }
+
+      return res;
+    },
     erase() {
       this.cxt.clearRect(0, 0, this.canvas.width, this.canvas.height);
     },
@@ -209,13 +265,20 @@
           }
         }
 
-        // 只有四种情况完全不碰撞
-        let b1 = (car.y >= (curBlock.y + curBlock.height)) // 汽车顶部大于块底部
-        let b2 = ((car.y + car.height) <= curBlock.y) // 汽车底部小于块顶部
-        let b3 = (car.x >= (curBlock.x + curBlock.width)) // 汽车左边大于块右边
-        let b4 = ((car.x + car.width) <= curBlock.x) // 汽车右边小于块左边
+        let A = curBlock.x,
+          B = curBlock.y,
+          C = A + curBlock.width,
+          D = B + curBlock.height;
 
-        if (!(b1 || b2 || b3 || b4)) {
+        let E = car.x,
+          F = car.y,
+          G = E + car.width,
+          H = F + car.height;
+
+        let crossRect = this.getCrossRect(A, B, C, D, E, F, G, H)
+        let isHit = (crossRect[2] - crossRect[0]) * (crossRect[3] - crossRect[1]) > 0 //相交矩形有面积
+
+        if (isHit) {
           if (curBlock.coin) {
             if (!curBlock.hide) {
               this.score += curBlock.coin
@@ -223,7 +286,31 @@
             }
             curBlock.hide = true
           } else {
-            this.gameStop()
+            if (this.dev || !this.usePixelCheck) {
+              this.gameStop()
+            } else {
+              let isRealHit = this.pixelCheck(
+                {
+                  img: this.carImg,
+                  x: car.x,
+                  y: car.y,
+                  w: car.width,
+                  h: car.height,
+                },
+                {
+                  img: this.brickObj[curBlock.name],
+                  x: curBlock.x,
+                  y: curBlock.y,
+                  w: curBlock.width,
+                  h: curBlock.height,
+                },
+                crossRect
+              )
+
+              if (isRealHit) {
+                this.gameStop()
+              }
+            }
           }
         }
       }
