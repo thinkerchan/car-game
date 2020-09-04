@@ -107,6 +107,7 @@
         chechRank(){
           this.isLoading = true
           if (!this.fromCache) { // 第一次进来, 需要上报结果
+            this.bestScore = this.score
             this.uploadRank()
           }else{
             this.querySelf(null,(bestScore)=>{ // 非首次进入, 则先对比分数是否超越最佳分数,否则不予上报
@@ -173,8 +174,9 @@
           this.showRankPop = false;
         },
         clearCache(){
-          localStorage.clear()
-          this.username = ''
+          this.fromCache = false;
+          localStorage.clear();
+          this.username = '';
           this.iptDisable = false;
         }
       },
